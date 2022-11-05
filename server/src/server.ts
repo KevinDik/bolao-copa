@@ -1,29 +1,35 @@
-import Fastify from 'fastify'
-import cors from '@fastify/cors'
-import {PrismaClient} from '@prisma/client'
+import Fastify from "fastify"
+import cors from "@fastify/cors"
+import jwt from "@fastify/jwt"
 
-const prisma = new PrismaClient({
-    log: ['query'],
-})
+import { poolRoutes } from "./routes/pool"
+import { authRoutes } from "./routes/auth"
+import { gameRoutes } from "./routes/game"
+import { guessRoutes } from "./routes/guess"
+import { userRoutes } from "./routes/user"
 
 async function bootstrap() {
-    const fastify = Fastify({
-        logger: true, /*Verifica os logs e envia para que possa monitorar*/ 
-    })
+  const fastify = Fastify({
+    logger: true,
+  })
 
-    await fastify.register(cors, {
-        origin: true,
-    })
+  await fastify.register(cors, {
+    origin: true,
+  })
 
-    // http://localhost:3333/pools/count
+  // Em produção isso precisa ser uma viarável de ambiente
 
-    fastify.get('/pools/count', async () =>{
-        const count = await prisma.pool.count()
+  await fastify.register(jwt, {
+    secret: 'nlwcopa',
+  })
 
-        return {count}
-    })
+  await fastify.register(poolRoutes)
+  await fastify.register(authRoutes)
+  await fastify.register(gameRoutes)
+  await fastify.register(guessRoutes)
+  await fastify.register(userRoutes)
 
-    await fastify.listen({port: 3333, /*host: '0.0.0.0'*/})
+  await fastify.listen({ port: 3333, host: '0.0.0.0' })
 }
 
 bootstrap()
